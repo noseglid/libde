@@ -33,5 +33,4 @@ libde_la_SOURCES = src/Emitter.cpp
 libde_la_LDFLAGS = $(GENERIC_LDFLAGS)
 
 include_HEADERS    = src/de.h
-pkginclude_HEADERS = src/Emitter.h \
-                     src/Receiver.h
+pkginclude_HEADERS = src/Emitter.h
