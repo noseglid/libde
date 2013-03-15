@@ -47,8 +47,10 @@ int main(void)
 	return 0;
 }
 ```
-> Absorbed event: eventname
-> Data: [1,12]
+`
+Absorbed event: eventname
+Data: [1,12]
+`
 
 A receiver can subscribe on any event - identified by a string.
 If the emitter emits an event with that identity (the same string), the receivers absorb callback will be called with appropriate information.
