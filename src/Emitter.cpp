@@ -13,14 +13,11 @@ namespace de {
 	}
 
 	void
-	Emitter::off(std::string event, event_cb cb)
+	Emitter::off(std::string event)
 	{
 		auto range = stakeholders.equal_range(event);
 		for (auto it = range.first; it != range.second; ++it) {
-			//if (it->second == cb) {
-				stakeholders.erase(it);
-				break;
-			//}
+			stakeholders.erase(it);
 		}
 	}
 

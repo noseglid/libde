@@ -17,7 +17,7 @@ namespace de {
 
 	public:
 		void on(std::string event, event_cb cb);
-		void off(std::string, event_cb cb);
+		void off(std::string);
 		void emit(std::string event, const Json::Value& data);
 	};
 };

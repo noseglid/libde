@@ -14,7 +14,6 @@ AM_INIT_AUTOMAKE([1.7 foreign])
 
 # Required headers
 AC_CONFIG_SRCDIR([src/Emitter.h])
-AC_CONFIG_SRCDIR([src/Receiver.h])
 
 # Checks for programs.
 AC_PROG_CXX
