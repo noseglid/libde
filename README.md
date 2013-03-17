@@ -10,6 +10,18 @@ License
 
 Distributed under [MIT License](http://opensource.org/licenses/MIT). Use it freely!
 
+Building and installing
+=======================
+Since it's headers only, no building is required.
+
+You can either copy the contents of the `src/` folder appropriately,
+By approriately means, all header files except `de.h` in one
+folder called `libde`(probably in `/usr/local/include/libde/`)
+then put `de.h` side-by-side with this folder (probably in `/usr/local/include/`).
+
+Or you can have autoconf do the work, use `./autogen.sh`, then `./configure` and finally `make install`.
+Obvously this approach requires autoconf (and automake).
+
 Basic Usage
 ===========
 
