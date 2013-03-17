@@ -3,22 +3,48 @@
 
 #include <map>
 #include <functional>
-#include <pjson.hpp>
+#include <string>
 
 namespace de {
 	class Emitter
 	{
-		typedef std::function< void(const Json::Value& data) > event_cb;
+		typedef std::function< void() > event_cb;
+		typedef std::multimap<std::string, event_cb> mm_t;
 
-		std::multimap<std::string, event_cb> stakeholders;
+		mm_t consumers;
 
 	protected:
-		Emitter();
+		Emitter()
+		{
+		}
 
 	public:
-		void on(std::string event, event_cb cb);
-		void off(std::string);
-		void emit(std::string event, const Json::Value& data);
+		typedef mm_t::iterator id_t;
+
+		id_t on(std::string event, event_cb cb)
+		{
+			return consumers.insert(std::make_pair(event, cb));
+		}
+
+		void off(id_t id)
+		{
+			consumers.erase(id);
+		}
+
+		void disable(std::string event)
+		{
+			consumers.erase(event);
+		}
+
+		void emit(std::string event)
+		{
+			mm_t tmp = consumers;
+			auto range = tmp.equal_range(event);
+			for (auto it = range.first; it != range.second; ++it) {
+				(it->second)();
+			}
+		}
+
 	};
 };
 
