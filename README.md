@@ -1,107 +1,126 @@
 Dynamic Events
-=====
+==============
 
 Dynamic Events is a framework for emitting and absorbing events
 between various areas of a C++ application. The philosophy is very
 much inspired by NodeJS with the 'on' and 'emit' functions.
+
+License
+=======
+
+Distributed under [MIT License](http://opensource.org/licenses/MIT). Use it freely!
 
 Basic Usage
 ===========
 
 ```c++
 #include <de.h>
-#include <pjson.hpp>
 #include <iostream>
 
 class emitter : public de::Emitter
 {
 public:
-	void do_stuff()
-	{
-		std::vector<int> v;
-		v.push_back(12);
-		v.push_back(1);
-		emit("eventname", Json::Builder::create(v));
-		emit("alarm", Json::Builder::create("important alarm data"));
-	}
+    void do_stuff()
+    {
+        emit("signal");
+    }
 };
 
 class receiver
 {
 public:
-	void eventname_method(const Json::Value& data)
-	{
-		std::cout << "eventname_method: " << Json::serialize(data) << std::endl;
-	}
-
-	void alarm(const Json::Value& data)
-	{
-		std::cout << "It's an alarm: " << Json::serialize(data) << std::endl;
-	}
+    void signal_method()
+    {
+        std::cout << "receiver::signal_handler" << std::endl;
+    }
 };
 
-void eventname_function(const Json::Value& data)
+void signal_function()
 {
-	std::cout << "eventname_function: " << Json::serialize(data) << std::endl;
+    std::cout << "function signal_handler" << std::endl;
 }
 
 int main(void)
 {
-	emitter e;
-	receiver r;
+    emitter e;
+    receiver r;
 
-	typedef std::function<void(const Json::Value&)> mthd_t;
-	auto eventname_method = std::bind(&receiver::eventname_method, &r, std::placeholders::_1);
-	auto alarm_method     = std::bind(&receiver::alarm, &r, std::placeholders::_1);
+    auto bound_call = std::bind(&receiver::signal_method, &r);
+    auto lambda = []() {
+        std::cout << "lambda signal_handler" << std::endl;
+    };
 
-	e.on("eventname", eventname_function);
-	e.on("eventname", eventname_method);
-	e.on("eventname", [](const Json::Value& data) {
-		std::cout << "eventname_lambda: " << Json::serialize(data) << std::endl;
-	});
-
-	e.on("alarm", alarm_method);
-
-	e.do_stuff();
-
-	return 0;
-}
-```
-    eventname_function: [12,1]
-    eventname_method: [12,1]
-    eventname_lambda: [12,1]
-    It's an alarm: "important alarm data"
-
-Quick overview
---------------
-    class emitter : public de::Emitter
-The emitter must be a class, and it must extend `de::Emitter`.
-The example class here have a function `do_stuff` which emits
-two events, `eventname` and `alarm`.
-
-	  void eventname_method(const Json::Value& data)
-The member method which will receive an event.
-
-    void eventname_function(const Json::Value& data)
-The global function which will receive an event.
-
-The typedefs and auto variables are C++ mambo-jambo to be able to create
-pointers to methods in instances of classes. Read up on this if you need.
-
-    e.on("eventname", eventname_function);
-With `on` we registered consumers of events.
+    e.on("signal", signal_function);
+    e.on("signal", bound_call);
+    e.on("signal", lambda);
 
     e.do_stuff();
-    ....
-    emit("eventname", Json::Builder::create(v));
-When we execute the method which `emit`s events, all registered consumers
-will be called.
 
-A consumer can subscribe on any event - identified by a string.
-If the emitter emits an event with that identity (the same string), the consumer will be called with appropriate information.
+    return 0;
+}
+```
+```
+function signal_handler
+receiver::signal_handler
+lambda signal_handler
+```
+Quick overview
+--------------
+```c++
+    class emitter : public de::Emitter
+```
 
-JSON as data
-============
-libde depends on [libpjson](https://github.com/noseglid/pjson) for transport of data. This is simply a C++ serializer/deserializer for JSON.
+The emitter must be a class, and it must extend `de::Emitter`.
+The example class here have a function `do_stuff` which emits
+the event `signal`.
 
-JSON was chosen as it is very basic and easy to use, yet with very powerful capabilities.
+The `signal_handler` is a basic function which will receive the event.
+
+The `receiver`-class is nothing special. It just have a method which can be called.
+We will later set this method to be called when `emitter` sends its event.
+
+The auto variables and bind are C++11 mambo-jambo to be able to create
+pointers to methods in instances of classes and lambdas. Read up on this if you need.
+
+```c++
+e.on("signal", signal_function);
+e.on("signal", signal_method);
+e.on("signal", signal_lambda);
+```
+The function `on` informs the emitter that we are interested in a certain type of event, in this case "signal".
+The event (which here is "signal") can be anything, and if the Emitter emits that type, the callback will be
+invoked.
+
+```c++
+e.do_stuff();
+```
+Performs some mundane tasks which inevitably will emit the event "signal".
+At this point, all the callbacks will be invoked. The order in which the
+callbacks are invoked is not defined - you should not rely on any particular
+order.
+
+The output is as expected:
+```
+function signal_handler
+receiver::signal_handler
+lambda signal_handler
+```
+
+Passing data
+------------
+You can easily include data using `std::bind`
+```c++
+void fn(int n)
+{
+	std::cout << "fn called with n: " << n << std::endl;
+}
+
+/* ... somewhere later ... */
+
+auto signal_function = std::bind(&fn, 2);
+e.on("signal", signal_function)
+```
+The same works for lambdas and member functions (methods).
+
+At the moment, the emitter can not include data in the response (short of the signal name, which
+should be fairly revealing in what happened).
