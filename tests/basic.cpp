@@ -3,7 +3,7 @@
 #define BOOST_TEST_MODULE basic
 #include <boost/test/included/unit_test.hpp>
 
-class em : public de::Emitter
+class em : public de::Emitter<>
 {
 public:
 	void emit_fn()
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE( on_off )
 	bool called = false;
 	auto cb = [&called]() { called = true; };
 
-	de::Emitter::id_t cbid = e.on("signal", cb);
+	de::Emitter<>::id_t cbid = e.on("signal", cb);
 	e.emit_fn();
 	BOOST_CHECK(called);
 

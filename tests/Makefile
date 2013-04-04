@@ -2,16 +2,16 @@ CC      = clang++
 CFLAGS  = -O0 -g3 -c -Wall -pedantic -std=c++11 -stdlib=libc++
 
 LDFLAGS += -stdlib=libc++
-SRCS  = basic.cpp
+SRCS  = basic.cpp data.cpp
 
 OBJS := $(SRCS:.cpp=.o)
+BINS := $(SRCS:%.cpp=test_%)
 DEPS := $(OBJS:.o=.d)
 
 .PHONY: all clean
 
-BIN = tests
-
-all: $(BIN)
+all: $(BINS)
+	@for t in $^; do ./$$t; done
 
 # The actual build target.
 # Dependency files are generated for each object file built.
@@ -27,10 +27,10 @@ all: $(BIN)
 		sed -e 's/^ *//' -e 's/$$/:/' >> $*.d
 	@rm -f $*.d.tmp
 
-$(BIN): $(OBJS)
+test_%: %.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 clean:
-	rm -f $(OBJS) $(DEPS) $(BIN)
+	rm -f $(OBJS) $(DEPS) $(BINS)
 
 -include $(DEPS)

@@ -29,7 +29,7 @@ Basic Usage
 #include <de.h>
 #include <iostream>
 
-class emitter : public de::Emitter
+class emitter : public de::Emitter<>
 {
 public:
     void do_stuff()
@@ -79,7 +79,7 @@ lambda signal_handler
 Quick overview
 --------------
 ```c++
-    class emitter : public de::Emitter
+    class emitter : public de::Emitter<>
 ```
 
 The emitter must be a class, and it must extend `de::Emitter`.
@@ -134,5 +134,19 @@ e.on("signal", signal_function)
 ```
 The same works for lambdas and member functions (methods).
 
-At the moment, the emitter can not include data in the response (short of the signal name, which
-should be fairly revealing in what happened).
+You can include custom data in when you emit events by including that type
+when you instantiate the Emitter.
+
+```c++
+class emitter :: de::Emitter<int>
+{
+public:
+  void emitting_function()
+  {
+    emit("signal", 12);
+  }
+};
+```
+
+Here all signals emitted from `emitting_function` will include the custom data 12.
+Naturally the receiving function must accept an integer argument.

@@ -6,7 +6,51 @@
 #include <string>
 
 namespace de {
+	struct __nodata {};
+
+	template <class T = struct __nodata>
 	class Emitter
+	{
+		typedef std::function< void(T) > event_cb;
+		typedef std::multimap<std::string, event_cb> mm_t;
+
+		mm_t consumers;
+
+	protected:
+		Emitter()
+		{
+		}
+
+	public:
+		typedef typename mm_t::iterator id_t;
+
+		id_t on(std::string event, event_cb cb)
+		{
+			return consumers.insert(std::make_pair(event, cb));
+		}
+
+		void off(id_t id)
+		{
+			consumers.erase(id);
+		}
+
+		void disable(std::string event)
+		{
+			consumers.erase(event);
+		}
+
+		void emit(std::string event, T data)
+		{
+			mm_t tmp = consumers;
+			auto range = tmp.equal_range(event);
+			for (auto it = range.first; it != range.second; ++it) {
+				(it->second)(data);
+			}
+		}
+	};
+
+	template <>
+	class Emitter <struct __nodata>
 	{
 		typedef std::function< void() > event_cb;
 		typedef std::multimap<std::string, event_cb> mm_t;
@@ -19,7 +63,7 @@ namespace de {
 		}
 
 	public:
-		typedef mm_t::iterator id_t;
+		typedef typename mm_t::iterator id_t;
 
 		id_t on(std::string event, event_cb cb)
 		{
@@ -44,7 +88,6 @@ namespace de {
 				(it->second)();
 			}
 		}
-
 	};
 };
 
