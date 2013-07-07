@@ -110,3 +110,73 @@ BOOST_AUTO_TEST_CASE( emit_delete )
 
 	BOOST_CHECK(true);
 }
+
+BOOST_AUTO_TEST_CASE( alter_1st_consumers_in_cb )
+{
+	em e;
+	de::Emitter<>::id_t idcb1, idcb2;
+
+	auto cb1 = [&idcb1, &e]() {
+		e.off(idcb1);
+	};
+
+	bool called = false;
+	auto cb2 = [&called]() {
+		called = true;
+	};
+
+	idcb1 = e.on("signal", cb1);
+	idcb2 = e.on("signal", cb2);
+
+	e.emit_fn();
+
+	BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( alter_2nd_consumers_in_cb )
+{
+	em e;
+	de::Emitter<>::id_t idcb1, idcb2;
+
+	auto cb1 = [&idcb1, &idcb2, &e]() {
+		e.off(idcb1);
+		e.off(idcb2);
+	};
+
+	bool called = false;
+	auto cb2 = [&called]() {
+		called = true;
+	};
+
+	idcb1 = e.on("signal", cb1);
+	idcb2 = e.on("signal", cb2);
+
+	e.emit_fn();
+
+	/**
+	 * No crash, excellent, and 2nd cb should be called
+	 * as we're copying consumers in the emit function.
+	 */
+	BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE ( delete_upcomming_cb )
+{
+	em e;
+	de::Emitter<>::id_t idcb1, idcb2;
+
+	auto cb1 = [&idcb1, &idcb2, &e]() {
+		e.off(idcb1);
+		e.off(idcb2);
+	};
+
+	bool called = false;
+	auto cb2 = [&called]() {
+		called = true;
+	};
+
+	idcb1 = e.on("signal", cb1);
+	idcb2 = e.on("signal", cb2);
+
+	e.emit_fn();
+}

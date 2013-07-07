@@ -43,8 +43,10 @@ namespace de {
 		{
 			mm_t tmp = consumers;
 			auto range = tmp.equal_range(event);
-			for (auto it = range.first; it != range.second; ++it) {
-				(it->second)(data);
+			auto it = range.first;
+			while (it != range.second) {
+				auto current = it++;
+				(current->second)(data);
 			}
 		}
 	};
@@ -84,8 +86,10 @@ namespace de {
 		{
 			mm_t tmp = consumers;
 			auto range = tmp.equal_range(event);
-			for (auto it = range.first; it != range.second; ++it) {
-				(it->second)();
+			auto it = range.first;
+			while (it != range.second) {
+				auto current = it++;
+				(current->second)();
 			}
 		}
 	};
