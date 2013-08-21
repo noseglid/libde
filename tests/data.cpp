@@ -55,3 +55,36 @@ BOOST_AUTO_TEST_CASE( dstest )
 	BOOST_CHECK(ds.i == 1);
 	BOOST_CHECK(ds.str == "MyString");
 }
+
+class recv
+{
+	de::Emitter<int>::id_t id;
+public:
+	void fn(de::Emitter<int>& em, bool& called, int val)
+	{
+		em.off(this->id);
+		called = true;
+	}
+
+	void set(de::Emitter<int>::id_t id)
+	{
+		this->id = id;
+	}
+};
+
+BOOST_AUTO_TEST_CASE( off_upcomming_consumer )
+{
+	emitter em;
+	recv re;
+	bool called = false;
+	bool not_called = false;
+
+	em.on("signal", std::bind(&recv::fn, &re, std::ref(em), std::ref(called), std::placeholders::_1));
+	de::Emitter<int>::id_t idcb = em.on("signal", [&not_called](int) { not_called = true; });
+	re.set(idcb);
+
+	em.fn();
+
+	BOOST_CHECK_EQUAL(called, true);
+	BOOST_CHECK_EQUAL(not_called, false);
+}

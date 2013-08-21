@@ -154,10 +154,10 @@ BOOST_AUTO_TEST_CASE( alter_2nd_consumers_in_cb )
 	e.emit_fn();
 
 	/**
-	 * No crash, excellent, and 2nd cb should be called
-	 * as we're copying consumers in the emit function.
+	 * No crash, excellent, and 2nd cb should not be called
+	 * as it should've been removed during cb1.
 	 */
-	BOOST_CHECK(called);
+	BOOST_CHECK_EQUAL(called, false);
 }
 
 BOOST_AUTO_TEST_CASE ( delete_upcomming_cb )
@@ -179,4 +179,37 @@ BOOST_AUTO_TEST_CASE ( delete_upcomming_cb )
 	idcb2 = e.on("signal", cb2);
 
 	e.emit_fn();
+}
+
+class recv
+{
+	de::Emitter<>::id_t id;
+public:
+	void fn(de::Emitter<>& e, bool& called)
+	{
+		e.off(this->id);
+		called = true;
+	}
+
+	void set(de::Emitter<>::id_t id)
+	{
+		this->id = id;
+	}
+};
+
+BOOST_AUTO_TEST_CASE( off_upcomming_consumer )
+{
+	em e;
+	recv re;
+	bool called = false;
+	bool not_called = false;
+
+	e.on("signal", std::bind(&recv::fn, &re, std::ref(e), std::ref(called)));
+	de::Emitter<>::id_t idcb = e.on("signal", [&not_called]() { not_called = true; });
+	re.set(idcb);
+
+	e.emit_fn();
+
+	BOOST_CHECK_EQUAL(called, true);
+	BOOST_CHECK_EQUAL(not_called, false);
 }
