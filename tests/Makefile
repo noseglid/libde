@@ -1,8 +1,8 @@
 CC      = clang++
 CFLAGS  = -O0 -g3 -c -Wall -pedantic -std=c++11 -stdlib=libc++
 
-LDFLAGS += -stdlib=libc++
-SRCS  = basic.cpp data.cpp
+LDFLAGS = -stdlib=libc++ -L../.libs -lde
+SRCS    = basic.cpp data.cpp
 
 OBJS := $(SRCS:.cpp=.o)
 BINS := $(SRCS:%.cpp=test_%)
@@ -11,7 +11,7 @@ DEPS := $(OBJS:.o=.d)
 .PHONY: all clean
 
 all: $(BINS)
-	@for t in $^; do ./$$t; done
+	@for t in $^; do DYLD_LIBRARY_PATH=../.libs ./$$t; done
 
 # The actual build target.
 # Dependency files are generated for each object file built.

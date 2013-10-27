@@ -133,8 +133,6 @@ namespace de {
 
   template <typename T>
   std::map<Emitter<T>*, std::vector<int>> de::Emitter<T>::erased;
-
-  std::map<Emitter<__nodata>*, std::vector<int>> de::Emitter<__nodata>::erased;
 };
 
 #endif
