@@ -7,120 +7,134 @@
 #include <string>
 
 namespace de {
-	struct __nodata {};
+  struct __nodata {};
 
-	struct key {
-		int id;
-		std::string event;
+  struct key {
+    int id;
+    std::string event;
 
-		key(int id, std::string event) : id(id), event(event) {}
-		bool operator<(const key& rhs) const { return event < rhs.event; }
-	};
+    key(int id, std::string event) : id(id), event(event) {}
+    bool operator<(const key& rhs) const { return event < rhs.event; }
+  };
 
-	template <class T = struct __nodata>
-	class Emitter
-	{
-		typedef std::function< void(T) > event_cb;
-		typedef std::multimap<key, event_cb> mm_t;
+  template <class T = struct __nodata>
+  class Emitter
+  {
+    typedef std::function< void(T) > event_cb;
+    typedef std::multimap<key, event_cb> mm_t;
+    static std::map<Emitter<T>*, std::vector<int>> erased;
 
-		mm_t consumers;
+    mm_t consumers;
 
-		int cur_id;
-		std::vector<int> erased;
+    int cur_id;
 
-	protected:
-		Emitter() : cur_id(0)
-		{
-		}
+  protected:
+    Emitter() : cur_id(0)
+    {
+    }
 
-	public:
-		typedef typename mm_t::iterator id_t;
+    ~Emitter()
+    {
+      erased.erase(this);
+    }
 
-		id_t on(std::string event, event_cb cb)
-		{
-			return consumers.insert(std::make_pair(key(cur_id++, event), cb));
-		}
+  public:
+    typedef typename mm_t::iterator id_t;
 
-		void off(id_t id)
-		{
-			erased.push_back(id->first.id);
-			consumers.erase(id);
-		}
+    id_t on(std::string event, event_cb cb)
+    {
+      return consumers.insert(std::make_pair(key(cur_id++, event), cb));
+    }
 
-		void disable(std::string event)
-		{
-			consumers.erase(key(-1, event));
-		}
+    void off(id_t id)
+    {
+      erased[this].push_back(id->first.id);
+      consumers.erase(id);
+    }
 
-		void emit(std::string event, T data)
-		{
-			mm_t tmp = consumers;
-			auto range = tmp.equal_range(key(-1, event));
-			auto it = range.first;
-			while (it != range.second) {
-				auto current = it++;
+    void disable(std::string event)
+    {
+      consumers.erase(key(-1, event));
+    }
 
-				auto found = std::find(erased.begin(), erased.end(), current->first.id);
-				if (erased.end() != found) continue;
+    void emit(std::string event, T data)
+    {
+      mm_t tmp = consumers;
+      auto range = tmp.equal_range(key(-1, event));
+      auto it = range.first;
+      while (it != range.second) {
+        auto current = it++;
 
-				(current->second)(data);
-			}
-			erased.clear();
-		}
-	};
+        auto found = std::find(erased[this].begin(), erased[this].end(), current->first.id);
+        if (erased[this].end() != found) continue;
 
-	template <>
-	class Emitter <struct __nodata>
-	{
-		typedef std::function< void() > event_cb;
-		typedef std::multimap<key, event_cb> mm_t;
+        (current->second)(data);
+      }
+      erased[this].clear();
+    }
+  };
 
-		mm_t consumers;
+  template <>
+  class Emitter <struct __nodata>
+  {
+    typedef std::function< void() > event_cb;
+    typedef std::multimap<key, event_cb> mm_t;
+    static std::map<Emitter<__nodata>*, std::vector<int>> erased;
 
-		int cur_id;
-		std::vector<int> erased;
+    mm_t consumers;
 
-	protected:
-		Emitter() : cur_id(0)
-		{
-		}
+    int cur_id;
 
-	public:
-		typedef typename mm_t::iterator id_t;
+  protected:
+    Emitter() : cur_id(0)
+    {
+    }
 
-		id_t on(std::string event, event_cb cb)
-		{
-			return consumers.insert(std::make_pair(key(cur_id++, event), cb));
-		}
+    ~Emitter()
+    {
+      erased.erase(this);
+    }
 
-		void off(id_t id)
-		{
-			erased.push_back(id->first.id);
-			consumers.erase(id);
-		}
+  public:
+    typedef typename mm_t::iterator id_t;
 
-		void disable(std::string event)
-		{
-			consumers.erase(key(-1, event));
-		}
+    id_t on(std::string event, event_cb cb)
+    {
+      return consumers.insert(std::make_pair(key(cur_id++, event), cb));
+    }
 
-		void emit(std::string event)
-		{
-			mm_t tmp = consumers;
-			auto range = tmp.equal_range(key(-1, event));
-			auto it = range.first;
-			while (it != range.second) {
-				auto current = it++;
+    void off(id_t id)
+    {
+      erased[this].push_back(id->first.id);
+      consumers.erase(id);
+    }
 
-				auto found = std::find(erased.begin(), erased.end(), current->first.id);
-				if (erased.end() != found) continue;
+    void disable(std::string event)
+    {
+      consumers.erase(key(-1, event));
+    }
 
-				(current->second)();
-			}
-			erased.clear();
-		}
-	};
+    void emit(std::string event)
+    {
+      mm_t tmp = consumers;
+      auto range = tmp.equal_range(key(-1, event));
+      auto it = range.first;
+      while (it != range.second) {
+        auto current = it++;
+
+        auto found = std::find(erased[this].begin(), erased[this].end(), current->first.id);
+        if (erased[this].end() != found) continue;
+
+        (current->second)();
+      }
+      erased[this].clear();
+    }
+  };
+
+  template <typename T>
+  std::map<Emitter<T>*, std::vector<int>> de::Emitter<T>::erased;
+
+  std::map<Emitter<__nodata>*, std::vector<int>> de::Emitter<__nodata>::erased;
 };
-
 
 #endif
