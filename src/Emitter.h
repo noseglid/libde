@@ -22,15 +22,20 @@ namespace de {
   {
     typedef std::function< void(T) > event_cb;
     typedef std::multimap<key, event_cb> mm_t;
+    static std::map<Emitter<T>*, std::vector<int>> erased;
 
     mm_t consumers;
 
     int cur_id;
-    std::vector<int> erased;
 
   protected:
     Emitter() : cur_id(0)
     {
+    }
+
+    ~Emitter()
+    {
+      erased.erase(this);
     }
 
   public:
@@ -43,7 +48,7 @@ namespace de {
 
     void off(id_t id)
     {
-      erased.push_back(id->first.id);
+      erased[this].push_back(id->first.id);
       consumers.erase(id);
     }
 
@@ -60,12 +65,12 @@ namespace de {
       while (it != range.second) {
         auto current = it++;
 
-        auto found = std::find(erased.begin(), erased.end(), current->first.id);
-        if (erased.end() != found) continue;
+        auto found = std::find(erased[this].begin(), erased[this].end(), current->first.id);
+        if (erased[this].end() != found) continue;
 
         (current->second)(data);
       }
-      erased.clear();
+      erased[this].clear();
     }
   };
 
@@ -74,15 +79,20 @@ namespace de {
   {
     typedef std::function< void() > event_cb;
     typedef std::multimap<key, event_cb> mm_t;
+    static std::map<Emitter<__nodata>*, std::vector<int>> erased;
 
     mm_t consumers;
 
     int cur_id;
-    std::vector<int> erased;
 
   protected:
     Emitter() : cur_id(0)
     {
+    }
+
+    ~Emitter()
+    {
+      erased.erase(this);
     }
 
   public:
@@ -95,7 +105,7 @@ namespace de {
 
     void off(id_t id)
     {
-      erased.push_back(id->first.id);
+      erased[this].push_back(id->first.id);
       consumers.erase(id);
     }
 
@@ -112,15 +122,19 @@ namespace de {
       while (it != range.second) {
         auto current = it++;
 
-        auto found = std::find(erased.begin(), erased.end(), current->first.id);
-        if (erased.end() != found) continue;
+        auto found = std::find(erased[this].begin(), erased[this].end(), current->first.id);
+        if (erased[this].end() != found) continue;
 
         (current->second)();
       }
-      erased.clear();
+      erased[this].clear();
     }
   };
-};
 
+  template <typename T>
+  std::map<Emitter<T>*, std::vector<int>> de::Emitter<T>::erased;
+
+  std::map<Emitter<__nodata>*, std::vector<int>> de::Emitter<__nodata>::erased;
+};
 
 #endif
