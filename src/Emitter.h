@@ -29,14 +29,7 @@ namespace de {
     int cur_id;
 
   protected:
-    Emitter() : cur_id(0)
-    {
-    }
-
-    ~Emitter()
-    {
-      erased.erase(this);
-    }
+    Emitter() : cur_id(0) { }
 
   public:
     typedef typename mm_t::iterator id_t;
@@ -69,8 +62,11 @@ namespace de {
         if (erased[this].end() != found) continue;
 
         (current->second)(data);
+        if (erased.find(this) == erased.end()) {
+          return;
+        }
       }
-      erased[this].clear();
+      erased.erase(this);
     }
   };
 
@@ -86,14 +82,7 @@ namespace de {
     int cur_id;
 
   protected:
-    Emitter() : cur_id(0)
-    {
-    }
-
-    ~Emitter()
-    {
-      erased.erase(this);
-    }
+    Emitter() : cur_id(0) { }
 
   public:
     typedef typename mm_t::iterator id_t;
@@ -126,8 +115,11 @@ namespace de {
         if (erased[this].end() != found) continue;
 
         (current->second)();
+        if (erased.find(this) == erased.end()) {
+          return;
+        }
       }
-      erased[this].clear();
+      erased.erase(this);
     }
   };
 
